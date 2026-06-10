@@ -1,8 +1,8 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
+import * as React from "react"
 
 import { cn } from '@/lib/utils'
-import { Separator } from '@/components/ui/separator'
 
 const buttonGroupVariants = cva(
   "flex w-fit items-stretch [&>*]:focus-visible:z-10 [&>*]:focus-visible:relative [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md has-[>[data-slot=button-group]]:gap-2",
@@ -57,24 +57,31 @@ function ButtonGroupText({
   )
 }
 
+// FIXED: Converted to a completely native HTML div element to 
+// eliminate external UI file paths or Radix compilation issues entirely.
+// Clear definition interface to tell TypeScript exactly how to handle parameters safely
+interface ButtonGroupSeparatorProps extends React.ComponentProps<'div'> {
+  orientation?: 'horizontal' | 'vertical'
+}
+
 function ButtonGroupSeparator({
   className,
   orientation = 'vertical',
   ...props
-}: React.ComponentProps<typeof Separator>) {
+}: ButtonGroupSeparatorProps) {
+  // Pulling the layout strings into explicit variables satisfies the linter rules completely
+  const baseStyles = "bg-input relative shrink-0"
+  const orientationStyles = orientation === 'vertical' ? 'w-[1px] h-auto self-stretch' : 'h-[1px] w-full'
+
   return (
-    <Separator
+    <div
       data-slot="button-group-separator"
-      orientation={orientation}
-      className={cn(
-        'bg-input relative !m-0 self-stretch data-[orientation=vertical]:h-auto',
-        className,
-      )}
+      data-orientation={orientation}
+      className={cn(baseStyles, orientationStyles, className)}
       {...props}
     />
   )
 }
-
 export {
   ButtonGroup,
   ButtonGroupSeparator,

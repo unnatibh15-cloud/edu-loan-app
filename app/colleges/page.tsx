@@ -1,320 +1,155 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { useMemo, useState } from "react"
 import { useStudent } from "@/context/student-context"
-import {
-  colleges,
-  countries,
-  calculateMatchScore,
-  getCollegeCategory,
-} from "@/lib/mock-data"
-import {
-  Search,
-  MapPin,
-  DollarSign,
-  Award,
-  TrendingUp,
-  ArrowUpRight,
-  Star,
-  Filter,
-} from "lucide-react"
+import { colleges, countries, degrees, calculateMatchScore } from "@/lib/mock-data"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Compass, GraduationCap, MapPin, BadgeIndianRupee, Star, ArrowUpRight } from "lucide-react"
 
-type CategoryFilter = "all" | "dream" | "moderate" | "safe"
-
-export default function CollegesPage() {
+export default function OxfordCollegesPage() {
   const { profile } = useStudent()
-  const [search, setSearch] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all")
-  const [countryFilter, setCountryFilter] = useState<string>("all")
+  
+  const [selectedCountry, setSelectedCountry] = useState<string>(profile.targetCountry || "USA")
+  const [selectedProgram, setSelectedProgram] = useState<string>(profile.degree || "Master's in Computer Science")
 
-  // Calculate match scores for all colleges
-  const collegesWithScores = useMemo(() => {
-    return colleges.map((college) => ({
-      ...college,
-      matchScore: calculateMatchScore(
-        college,
-        profile.cgpa || 3.0,
-        profile.ielts || 6.5,
-        profile.budget || 50000
-      ),
-    }))
-  }, [profile.cgpa, profile.ielts, profile.budget])
-
-  // Apply filters
-  const filteredColleges = useMemo(() => {
-    return collegesWithScores
+  const filteredAndScoredColleges = useMemo(() => {
+    return colleges
       .filter((college) => {
-        // Country filter
-        if (countryFilter !== "all" && college.country !== countryFilter) {
-          return false
-        }
-        // Target country preference (prioritize but don't exclude)
-        // Search filter
-        if (
-          search &&
-          !college.name.toLowerCase().includes(search.toLowerCase()) &&
-          !college.city.toLowerCase().includes(search.toLowerCase())
-        ) {
-          return false
-        }
-        // Category filter
-        const category = getCollegeCategory(college.matchScore)
-        if (categoryFilter !== "all" && category !== categoryFilter) {
-          return false
-        }
-        return true
+        const matchesCountry = college.country.toLowerCase() === selectedCountry.toLowerCase()
+        const matchesProgram = college.programs.includes(selectedProgram)
+        return matchesCountry && matchesProgram
       })
-      .sort((a, b) => {
-        // Prioritize target country
-        if (profile.targetCountry) {
-          if (a.country === profile.targetCountry && b.country !== profile.targetCountry) return -1
-          if (b.country === profile.targetCountry && a.country !== profile.targetCountry) return 1
-        }
-        return b.matchScore - a.matchScore
+      .map((college) => {
+        const score = calculateMatchScore(
+          college,
+          profile.cgpa || 8.0,
+          profile.ielts || 7.0,
+          profile.budget || 45
+        )
+        return { ...college, matchScore: score }
       })
-  }, [collegesWithScores, search, categoryFilter, countryFilter, profile.targetCountry])
-
-  // Count by category
-  const categoryCounts = useMemo(() => {
-    return collegesWithScores.reduce(
-      (acc, college) => {
-        const category = getCollegeCategory(college.matchScore)
-        acc[category]++
-        return acc
-      },
-      { dream: 0, moderate: 0, safe: 0 } as Record<string, number>
-    )
-  }, [collegesWithScores])
-
-  const getRecommendation = (college: typeof collegesWithScores[0]) => {
-    if (college.matchScore >= 70) {
-      return { text: "Apply Now", variant: "default" as const }
-    } else if (college.matchScore >= 50) {
-      return { text: "Good Chance", variant: "secondary" as const }
-    } else {
-      return { text: "Improve Profile", variant: "outline" as const }
-    }
-  }
+      .sort((a, b) => b.matchScore - a.matchScore)
+  }, [selectedCountry, selectedProgram, profile])
 
   return (
-    <DashboardLayout>
-      <div className="p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">College Recommendations</h1>
-              <p className="text-muted-foreground mt-1">
-                {filteredColleges.length} colleges matched based on your profile
-              </p>
+    <div className="min-h-screen bg-[#F8F9FA] text-[#0F172A] p-6 lg:p-10 font-sans antialiased">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Scholar Header */}
+        <div className="space-y-1">
+          <span className="text-xs font-bold text-[#1A2E40] tracking-wider uppercase">Institutional Alignment</span>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Compatible Universities</h1>
+          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+            Cross-referencing international parameters against your aggregate portfolio data.
+          </p>
+        </div>
+
+        {/* Filter Controls Console */}
+        <Card className="bg-white border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
+          <CardContent className="p-6 grid sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" /> Destination Region
+              </label>
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="bg-slate-50/50 border-slate-200/70 rounded-xl text-xs sm:text-sm h-11 focus:ring-1 focus:ring-slate-400 transition-all">
+                  <SelectValue placeholder="Select Country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((c) => (
+                    <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          {/* Filters */}
-          <Card className="glass">
-            <CardContent className="p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search colleges or cities..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 bg-secondary/50"
-                  />
-                </div>
-
-                {/* Country Filter */}
-                <Select value={countryFilter} onValueChange={setCountryFilter}>
-                  <SelectTrigger className="w-full lg:w-48 bg-secondary/50">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="All Countries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Countries</SelectItem>
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Category Tabs */}
-                <Tabs value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
-                  <TabsList className="bg-secondary/50">
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="safe" className="data-[state=active]:bg-success data-[state=active]:text-success-foreground">
-                      Safe ({categoryCounts.safe})
-                    </TabsTrigger>
-                    <TabsTrigger value="moderate" className="data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">
-                      Moderate ({categoryCounts.moderate})
-                    </TabsTrigger>
-                    <TabsTrigger value="dream">
-                      Dream ({categoryCounts.dream})
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Target Country Notice */}
-          {profile.targetCountry && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Star className="w-4 h-4 text-primary" />
-              <span>
-                Showing results for <span className="text-foreground font-medium">{profile.targetCountry}</span> first
-              </span>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-slate-400" /> Target Program Track
+              </label>
+              <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+                <SelectTrigger className="bg-slate-50/50 border-slate-200/70 rounded-xl text-xs sm:text-sm h-11 focus:ring-1 focus:ring-slate-400 transition-all">
+                  <SelectValue placeholder="Select Program" />
+                </SelectTrigger>
+                <SelectContent>
+                  {degrees.map((d) => (
+                    <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+          </CardContent>
+        </Card>
 
-          {/* College Grid */}
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredColleges.map((college) => {
-              const category = getCollegeCategory(college.matchScore)
-              const recommendation = getRecommendation(college)
-              const isTargetCountry = college.country === profile.targetCountry
+        {/* Counter */}
+        <div className="px-1 flex items-center justify-between">
+          <p className="text-xs font-bold text-slate-400">
+            Identified {filteredAndScoredColleges.length} direct institution alignments
+          </p>
+        </div>
 
+        {/* Navy Accented Grid System */}
+        {filteredAndScoredColleges.length > 0 ? (
+          <div className="grid sm:grid-cols-2 gap-5">
+            {filteredAndScoredColleges.map((college) => {
+              const totalCostINR = ((college.tuitionFeeUSD + college.livingCostUSD) * 85) / 100000
               return (
-                <Card
-                  key={college.id}
-                  className={`glass glass-hover ${
-                    isTargetCountry ? "border-primary/30" : ""
-                  }`}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                        {college.logo}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isTargetCountry && (
-                          <Badge variant="outline" className="text-primary border-primary/50">
-                            <Star className="w-3 h-3 mr-1" />
-                            Preferred
-                          </Badge>
-                        )}
-                        <Badge
-                          className={
-                            category === "safe"
-                              ? "bg-success text-success-foreground"
-                              : category === "moderate"
-                              ? "bg-warning text-warning-foreground"
-                              : "bg-secondary"
-                          }
-                        >
-                          {category === "safe" ? "Safe" : category === "moderate" ? "Moderate" : "Dream"}
+                <Card key={college.id} className="bg-white border border-slate-200/50 rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between group hover:border-[#1A2E40] transition-all duration-200">
+                  <CardContent className="p-6 flex flex-col justify-between h-full space-y-5">
+                    
+                    <div className="space-y-2">
+                      <div className="w-6 h-1 rounded-full bg-slate-200 group-hover:bg-[#1A2E40] transition-colors" />
+                      <h3 className="font-bold text-base text-slate-800 tracking-tight leading-snug">
+                        {college.name}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                        <MapPin className="w-3 h-3 shrink-0 text-slate-300" /> {college.city}, {college.country}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                          <BadgeIndianRupee className="w-4 h-4 text-slate-400" />
+                          <span>~{Math.round(totalCostINR)} Lakhs / yr</span>
+                        </div>
+                        
+                        <Badge className="bg-[#EDF4FA] border border-[#D4E4F5] text-[#1A2E40] font-mono font-bold text-[10px] shadow-none px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                          <Star className="w-3 h-3 text-[#1A2E40] fill-[#1A2E40]" /> {college.matchScore}% Match
                         </Badge>
                       </div>
+
+                      <button
+                        onClick={() => {
+                          const universityQueryName = encodeURIComponent(`${college.name} official application admission login portal`);
+                          const directLoginRedirectUrl = `https://www.google.com/search?q=${universityQueryName}&btnI=I%27m+Feeling+Lucky`;
+                          window.open(directLoginRedirectUrl, '_blank');
+                        }}
+                        className="w-full bg-slate-900 hover:bg-[#1A2E40] text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 group/btn"
+                      >
+                        Proceed to Application Hub
+                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-white transition-colors" />
+                      </button>
                     </div>
 
-                    <h3 className="font-semibold text-lg mb-1 line-clamp-2">
-                      {college.name}
-                    </h3>
-
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-                      <MapPin className="w-4 h-4" />
-                      <span>
-                        {college.city}, {college.country}
-                      </span>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="p-2 rounded-lg bg-secondary/50">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                          <Award className="w-3 h-3" />
-                          <span>Ranking</span>
-                        </div>
-                        <p className="font-semibold">#{college.ranking}</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-secondary/50">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                          <TrendingUp className="w-3 h-3" />
-                          <span>Match</span>
-                        </div>
-                        <p className="font-semibold">{college.matchScore}%</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-secondary/50">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                          <DollarSign className="w-3 h-3" />
-                          <span>Tuition</span>
-                        </div>
-                        <p className="font-semibold">${(college.tuitionFee / 1000).toFixed(0)}K</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-secondary/50">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                          <DollarSign className="w-3 h-3" />
-                          <span>Living</span>
-                        </div>
-                        <p className="font-semibold">${(college.livingCost / 1000).toFixed(0)}K/yr</p>
-                      </div>
-                    </div>
-
-                    {/* Requirements */}
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
-                      <span>Min CGPA: {college.minCGPA}</span>
-                      <span>|</span>
-                      <span>Min IELTS: {college.minIELTS}</span>
-                    </div>
-
-                    {/* Programs */}
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {college.programs.slice(0, 3).map((program) => (
-                        <Badge key={program} variant="outline" className="text-xs">
-                          {program}
-                        </Badge>
-                      ))}
-                      {college.programs.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{college.programs.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Action */}
-                    <Button
-                      className="w-full"
-                      variant={recommendation.variant}
-                    >
-                      {recommendation.text}
-                      <ArrowUpRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </CardContent>
                 </Card>
               )
             })}
           </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200/50 p-12 text-center max-w-md mx-auto space-y-3 shadow-sm">
+            <Compass className="w-7 h-7 mx-auto text-slate-300 animate-pulse" />
+            <p className="text-sm font-bold text-slate-700">No Direct Alignments Found</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Try modifying your academic filters or configurations inside your profile settings panel.
+            </p>
+          </div>
+        )}
 
-          {/* Empty State */}
-          {filteredColleges.length === 0 && (
-            <Card className="glass">
-              <CardContent className="p-12 text-center">
-                <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="font-semibold mb-2">No colleges found</h3>
-                <p className="text-sm text-muted-foreground">
-                  Try adjusting your filters or search query
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

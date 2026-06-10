@@ -1,404 +1,343 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useStudent } from "@/context/student-context"
-import { countries, degrees, skills as allSkills } from "@/lib/mock-data"
-import {
-  GraduationCap,
-  Send,
-  Bot,
-  User,
-  ArrowRight,
-  LayoutDashboard,
-  ChevronLeft,
-  Sparkles,
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useStudent } from "@/context/student-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { countries, degrees } from "@/lib/mock-data";
+import { 
+  ArrowRight, 
+  ArrowLeft, 
   CheckCircle2,
-} from "lucide-react"
+  MapPin,
+  GraduationCap,
+  X,
+  Plus,
+  Compass,
+  Heart
+} from "lucide-react";
 
-interface Message {
-  id: string
-  role: "assistant" | "user"
-  content: string
-  options?: string[]
-  field?: keyof typeof fieldQuestions
-}
+const dynamicProgramSkills: Record<string, string[]> = {
+  "Master's in Computer Science": ["Python", "Java", "Data Structures", "System Design", "SQL", "Cloud Computing", "JavaScript", "React", "Node.js"],
+  "Master's in Data Science": ["Python", "R Programming", "SQL", "Data Analysis", "Tableau", "Statistics", "Machine Learning", "Pandas"],
+  "Master's in Artificial Intelligence": ["Python", "PyTorch", "Machine Learning", "Deep Learning", "Data Analysis", "Mathematics", "Computer Vision", "NLP"],
+  "Master's in Business Administration (MBA)": ["Financial Analysis", "Corporate Strategy", "Marketing Dynamics", "Leadership", "Excel", "Data Interpretation", "PowerBI"],
+  "Master's in Engineering & Automation": ["MATLAB", "PLC Programming", "AutoCAD Electrical", "SCADA Systems", "Robotics Control", "Sensors", "Embedded Systems", "C++"],
+  "Bachelor's in Computer Science": ["Python", "C++", "Java", "HTML/CSS", "JavaScript", "Data Structures", "SQL", "Git GitHub"],
+  "Bachelor's in Engineering": ["Mathematics", "Physics", "MATLAB", "AutoCAD", "C++", "Circuit Analysis", "SolidWorks"]
+};
 
-const fieldQuestions = {
-  name: "What's your name?",
-  targetCountry: "Which country would you like to study in?",
-  currentCountry: "Which country are you currently in?",
-  degree: "What degree program are you interested in?",
-  budget: "What's your total budget for education (in USD)?",
-  cgpa: "What's your current CGPA (on a 4.0 scale)?",
-  ielts: "What's your IELTS score? (Enter 0 if not taken)",
-  skills: "What are your key skills? (Select multiple or type your own)",
-  experience: "How many years of relevant work experience do you have?",
-}
+export default function HumanizedChatPage() {
+  const router = useRouter();
+  const { updateProfile } = useStudent();
+  
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 6;
+  const [validationError, setValidationError] = useState("");
+  const [customSkill, setCustomSkill] = useState("");
 
-const welcomeMessage: Message = {
-  id: "welcome",
-  role: "assistant",
-  content: "Welcome to EduPilot AI! I'm your personal study abroad copilot. I'll help you find the perfect university and education loan based on your profile. Let's start by getting to know you better.",
-}
+  const [formData, setFormData] = useState({
+    name: "",
+    currentCountry: "Kanpur, India",
+    targetCountry: "",
+    degree: "",
+    budget: "",
+    cgpa: "",
+    ielts: "",
+    toefl: "",
+    skills: [] as string[],
+    experience: "",
+    hasCollateral: null as boolean | null,
+    goal: "",
+  });
 
-export default function ChatPage() {
-  const { profile, updateProfile, profileCompletion } = useStudent()
-  const [messages, setMessages] = useState<Message[]>([welcomeMessage])
-  const [input, setInput] = useState("")
-  const [currentField, setCurrentField] = useState<keyof typeof fieldQuestions>("name")
-  const [isTyping, setIsTyping] = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const getActiveSkillsOptions = (): string[] => {
+    const chosenDegree = formData.degree || "Master's in Computer Science";
+    const matchedKey = Object.keys(dynamicProgramSkills).find(
+      (key) => key.toLowerCase().trim() === chosenDegree.toLowerCase().trim()
+    );
+    return matchedKey ? dynamicProgramSkills[matchedKey] : dynamicProgramSkills["Master's in Computer Science"];
+  };
 
-  const fieldOrder: (keyof typeof fieldQuestions)[] = [
-    "name",
-    "targetCountry",
-    "currentCountry",
-    "degree",
-    "budget",
-    "cgpa",
-    "ielts",
-    "skills",
-    "experience",
-  ]
-
-  useEffect(() => {
-    // Ask the first question after welcome
-    const timer = setTimeout(() => {
-      askQuestion("name")
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" })
+  const validateStep = (): boolean => {
+    setValidationError("");
+    if (currentStep === 1 && !formData.name.trim()) {
+      setValidationError("I'd love to know what to call you first! Please drop your name above.");
+      return false;
     }
-  }, [messages])
-
-  const askQuestion = (field: keyof typeof fieldQuestions) => {
-    setIsTyping(true)
-    setTimeout(() => {
-      let options: string[] | undefined
-      if (field === "targetCountry" || field === "currentCountry") {
-        options = countries
-      } else if (field === "degree") {
-        options = degrees
-      } else if (field === "skills") {
-        options = allSkills.slice(0, 8)
+    if (currentStep === 2) {
+      if (!formData.targetCountry) {
+        setValidationError("Please select your dream destination region to pull matching data frameworks.");
+        return false;
       }
-
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: fieldQuestions[field],
-        options,
-        field,
+      if (!formData.degree) {
+        setValidationError("Select your target curriculum track so we can analyze program criteria.");
+        return false;
       }
-      setMessages((prev) => [...prev, newMessage])
-      setCurrentField(field)
-      setIsTyping(false)
-    }, 500)
-  }
-
-  const handleSend = (value?: string) => {
-    const messageContent = value || input
-    if (!messageContent.trim()) return
-
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: messageContent,
     }
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-
-    // Update profile based on current field
-    const fieldValue = parseFieldValue(currentField, messageContent)
-    updateProfile({ [currentField]: fieldValue })
-
-    // Move to next question or finish
-    const currentIndex = fieldOrder.indexOf(currentField)
-    if (currentIndex < fieldOrder.length - 1) {
-      setTimeout(() => {
-        askQuestion(fieldOrder[currentIndex + 1])
-      }, 500)
-    } else {
-      // Profile complete
-      setIsTyping(true)
-      setTimeout(() => {
-        const completeMessage: Message = {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: `Excellent, ${profile.name || messageContent.split(" ")[0]}! Your profile is complete. Based on your information, I've prepared personalized college recommendations, skill gap analysis, and loan options. Ready to explore your dashboard?`,
-        }
-        setMessages((prev) => [...prev, completeMessage])
-        setIsTyping(false)
-      }, 1000)
-    }
-  }
-
-  const parseFieldValue = (field: keyof typeof fieldQuestions, value: string) => {
-    switch (field) {
-      case "budget":
-        return parseInt(value.replace(/[^0-9]/g, "")) || 0
-      case "cgpa":
-        return parseFloat(value) || 0
-      case "ielts":
-        return parseFloat(value) || 0
-      case "experience":
-        return parseInt(value) || 0
-      case "skills":
-        return value.split(",").map((s) => s.trim()).filter(Boolean)
-      default:
-        return value
-    }
-  }
-
-  const handleOptionClick = (option: string) => {
-    if (currentField === "skills") {
-      const currentSkills = input ? input.split(", ") : []
-      if (currentSkills.includes(option)) {
-        setInput(currentSkills.filter((s) => s !== option).join(", "))
-      } else {
-        setInput([...currentSkills, option].join(", "))
+    if (currentStep === 3) {
+      const gpa = parseFloat(formData.cgpa);
+      if (isNaN(gpa) || gpa < 0 || gpa > 10.0) {
+        setValidationError("Let's input a valid academic CGPA score tracked on a 10.0 scale.");
+        return false;
       }
-    } else {
-      handleSend(option)
     }
-  }
+    return true;
+  };
 
-  const selectedSkills = input.split(", ").filter(Boolean)
+  const handleNext = () => {
+    if (validateStep() && currentStep < totalSteps) setCurrentStep((prev) => prev + 1);
+  };
+
+  const handlePrev = () => {
+    setValidationError("");
+    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleSkillToggle = (skill: string) => {
+    setFormData((prev) => {
+      const exists = prev.skills.includes(skill);
+      return { ...prev, skills: exists ? prev.skills.filter((s) => s !== skill) : [...prev.skills, skill] };
+    });
+  };
+
+  const handleAddCustomSkill = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customSkill.trim() && !formData.skills.includes(customSkill.trim())) {
+      setFormData((prev) => ({ ...prev, skills: [...prev.skills, customSkill.trim()] }));
+      setCustomSkill("");
+    }
+  };
+
+  const handleFinishOnboarding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateStep()) return;
+
+    updateProfile({
+      name: formData.name,
+      currentCountry: formData.currentCountry,
+      targetCountry: formData.targetCountry,
+      degree: formData.degree,
+      cgpa: parseFloat(formData.cgpa) || 0,
+      ielts: parseFloat(formData.ielts) || 0,
+      toefl: parseFloat(formData.toefl) || 0,
+      skills: formData.skills,
+      experience: parseInt(formData.experience) || 0,
+      budget: parseInt(formData.budget) || 0,
+      hasCollateral: formData.hasCollateral === true,
+      goal: formData.goal,
+    });
+
+    router.push("/dashboard");
+  };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex w-80 flex-col border-r border-border glass">
-        <div className="p-4 border-b border-border">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold">EduPilot AI</span>
-          </Link>
-        </div>
+    // 🎯 REFACTORED FOR WIDESCREEN: Remapped outer canvas bounds to remove centered bounding boxes
+    <div className="w-full min-h-screen bg-[#FAF6F0] flex flex-col justify-between font-sans antialiased relative overflow-hidden select-none">
+      
+      {/* Decorative high-end ambient design sweeps */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#B85C38]/5 blur-3xl pointer-events-none transform translate-x-1/4 -translate-y-1/4" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-stone-200/40 blur-3xl pointer-events-none transform -translate-x-1/4 translate-y-1/4" />
 
-        <div className="p-4 flex-1">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Profile Completion</span>
-              <span className="text-sm text-primary">{profileCompletion}%</span>
-            </div>
-            <Progress value={profileCompletion} className="h-2" />
+      {/* Structured full-width fluid header tracking box */}
+      <div className="w-full max-w-7xl mx-auto px-6 py-6 lg:px-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/60 relative z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-orange-100/60 flex items-center justify-center">
+            <Compass className="w-3.5 h-3.5 text-[#B85C38]" />
           </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Your Profile
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(fieldQuestions).map(([key, label]) => {
-                const value = profile[key as keyof typeof profile]
-                const hasValue = Array.isArray(value) ? value.length > 0 : Boolean(value)
-                return (
-                  <div
-                    key={key}
-                    className={`flex items-center gap-2 text-sm ${
-                      hasValue ? "text-foreground" : "text-muted-foreground"
-                    }`}
-                  >
-                    <CheckCircle2
-                      className={`w-4 h-4 ${
-                        hasValue ? "text-primary" : "text-muted-foreground/50"
-                      }`}
-                    />
-                    <span className="truncate">
-                      {hasValue
-                        ? Array.isArray(value)
-                          ? value.join(", ")
-                          : String(value)
-                        : label.replace("?", "")}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          <span className="text-[10px] uppercase font-black tracking-widest text-stone-400">
+            Chapter {currentStep} of {totalSteps}
+          </span>
         </div>
+        <span className="text-xs sm:text-sm font-bold text-[#B85C38]">
+          {currentStep === 1 && "Aligning profile registry metrics origin"}
+          {currentStep === 2 && "Mapping your ultimate university destination"}
+          {currentStep === 3 && "Cataloging academic parameters performance records"}
+          {currentStep === 4 && "Verifying specialized domain functional skills and scores"}
+          {currentStep === 5 && "Reviewing your logged practical engineering history base"}
+          {currentStep === 6 && "Balancing financial caps limits with path vision targets"}
+        </span>
+      </div>
 
-        <div className="p-4 border-t border-border">
-          <Button asChild className="w-full" variant="outline">
-            <Link href="/dashboard">
-              <LayoutDashboard className="w-4 h-4 mr-2" />
-              Go to Dashboard
-            </Link>
-          </Button>
-        </div>
-      </aside>
+      {/* Horizontal step indicator timeline bar directly under upper headers */}
+      <div className="w-full h-1 bg-stone-200/60 relative z-10">
+        <div className="h-full bg-[#B85C38] transition-all duration-500 ease-out" style={{ width: `${(currentStep / totalSteps) * 100}%` }} />
+      </div>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 border-b border-border glass flex items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="lg:hidden">
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary" />
+      {/* 🚀 EXTENDED CONTENT CONTAINER: Stretches beautifully to clear maximum width borders */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12 lg:px-12 lg:py-16 flex flex-col justify-center relative z-10">
+        <div className="max-w-3xl w-full mr-auto space-y-8">
+
+          {/* STEP 1: IDENTITY */}
+          {currentStep === 1 && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">First things first—what should we call you?</h2>
+                <p className="text-sm sm:text-base text-stone-500 font-semibold leading-relaxed">Let's establish your secure personal workspace parameters. Where are you currently preparing from?</p>
               </div>
-              <div>
-                <h1 className="font-semibold">EduPilot AI</h1>
-                <p className="text-xs text-muted-foreground">Your study abroad copilot</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="lg:hidden text-sm text-muted-foreground">
-              {profileCompletion}% complete
-            </div>
-            <Button asChild size="sm" variant="outline" className="hidden sm:flex">
-              <Link href="/dashboard">
-                Dashboard
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-          </div>
-        </header>
-
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="max-w-3xl mx-auto space-y-6">
-            {messages.map((message) => (
-              <div key={message.id} className="space-y-3">
-                <div
-                  className={`flex gap-3 ${
-                    message.role === "user" ? "flex-row-reverse" : ""
-                  }`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      message.role === "assistant"
-                        ? "bg-primary/20"
-                        : "bg-secondary"
-                    }`}
-                  >
-                    {message.role === "assistant" ? (
-                      <Bot className="w-5 h-5 text-primary" />
-                    ) : (
-                      <User className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div
-                    className={`px-4 py-3 rounded-2xl max-w-[80%] ${
-                      message.role === "assistant"
-                        ? "glass"
-                        : "bg-primary text-primary-foreground"
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                  </div>
+              <div className="space-y-4 pt-2 max-w-xl">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">Your Name</label>
+                  <Input placeholder="e.g., Shrey Jain" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-12 rounded-xl border-stone-200 bg-white px-4 text-sm focus:border-stone-400 focus:ring-0 shadow-xs" />
                 </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">Current Operating Base Location</label>
+                  <Input placeholder="e.g., Kanpur, India" value={formData.currentCountry} onChange={(e) => setFormData({ ...formData, currentCountry: e.target.value })} className="h-12 rounded-xl border-stone-200 bg-white px-4 text-sm focus:border-stone-400 focus:ring-0 shadow-xs" />
+                </div>
+              </div>
+            </div>
+          )}
 
-                {/* Options */}
-                {message.options && message.field === currentField && (
-                  <div className="ml-11 flex flex-wrap gap-2">
-                    {message.options.map((option) => (
-                      <Button
-                        key={option}
-                        variant={
-                          message.field === "skills" && selectedSkills.includes(option)
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        onClick={() => handleOptionClick(option)}
-                        className="rounded-full"
-                      >
-                        {option}
-                      </Button>
+          {/* STEP 2: GEOGRAPHY */}
+          {currentStep === 2 && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">Where is your dream program taking you?</h2>
+                <p className="text-sm sm:text-base text-stone-500 font-semibold leading-relaxed">Select your target study destination and curriculum blueprint below so I can pull active local visa metrics.</p>
+              </div>
+              <div className="space-y-6 pt-2">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#B85C38]" /> Select Target Destination
+                  </label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {countries.map((country) => (
+                      <Button key={country} type="button" variant={formData.targetCountry === country ? "default" : "outline"} className={`text-xs h-10 px-5 rounded-xl font-bold transition-all shadow-xs ${formData.targetCountry === country ? "bg-[#B85C38] text-white hover:bg-[#9E4B2C]" : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"}`} onClick={() => setFormData({ ...formData, targetCountry: country })}>{country}</Button>
                     ))}
                   </div>
-                )}
-              </div>
-            ))}
-
-            {/* Typing indicator */}
-            {isTyping && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary" />
                 </div>
-                <div className="px-4 py-3 rounded-2xl glass">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.1s]" />
-                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="space-y-3 max-w-xl">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-[#B85C38]" /> Intended Higher Curriculum Track
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    {degrees.map((deg) => (
+                      <Button key={deg} type="button" variant={formData.degree === deg ? "default" : "outline"} className={`justify-start text-xs h-11 px-4 font-bold text-left truncate rounded-xl transition-all shadow-xs ${formData.degree === deg ? "bg-[#B85C38] text-white hover:bg-[#9E4B2C]" : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"}`} onClick={() => setFormData({ ...formData, degree: deg, skills: [] })}>{deg}</Button>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Complete message actions */}
-            {profileCompletion === 100 && (
-              <div className="ml-11 flex flex-wrap gap-2">
-                <Button onClick={() => router.push("/dashboard")} className="glow">
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  View Dashboard
-                </Button>
-                <Button variant="outline" onClick={() => router.push("/colleges")}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  See College Matches
-                </Button>
+          {/* STEP 3: ACADEMIC LANDMARKS */}
+          {currentStep === 3 && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">Let's catalog your academic performance history.</h2>
+                <p className="text-sm sm:text-base text-stone-500 font-semibold leading-relaxed">What is your current undergraduate aggregate CGPA index scale mark? Our matcher will use this to verify admission alignment parameters instantly.</p>
               </div>
-            )}
-
-            <div ref={scrollRef} />
-          </div>
-        </ScrollArea>
-
-        {/* Input */}
-        <div className="p-4 border-t border-border glass">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex gap-2">
-              <Input
-                placeholder={
-                  currentField === "skills"
-                    ? "Type skills or select above, then send..."
-                    : "Type your answer..."
-                }
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                className="h-12 bg-secondary/50"
-              />
-              <Button
-                onClick={() => handleSend()}
-                className="h-12 px-6"
-                disabled={!input.trim()}
-              >
-                <Send className="w-5 h-5" />
-              </Button>
+              <div className="space-y-1.5 pt-2 max-w-xl">
+                <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">Your Local Indian CGPA (on a 10.0 scale)</label>
+                <Input type="number" step="0.01" placeholder="e.g., 8.42" value={formData.cgpa} onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })} className="h-12 rounded-xl border-stone-200 bg-white px-4 text-sm focus:border-stone-400 focus:ring-0 font-mono shadow-xs" />
+              </div>
             </div>
-            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span>Press Enter to send</span>
-              <span>
-                {currentField === "skills" && selectedSkills.length > 0
-                  ? `${selectedSkills.length} skills selected`
-                  : `Question ${fieldOrder.indexOf(currentField) + 1} of ${fieldOrder.length}`}
-              </span>
+          )}
+
+          {/* STEP 4: SKILLS REFRAME */}
+          {currentStep === 4 && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">Languages & functional field capabilities.</h2>
+                <p className="text-sm sm:text-base text-stone-500 font-semibold leading-relaxed">Select specialized strengths to establish your core profile. Leave language baselines at 0 if tests are still pending—completely normal!</p>
+              </div>
+              <div className="space-y-5 pt-2 w-full">
+                <div className="space-y-1.5 max-w-xl">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">IELTS Overall Band Score (Put 0 if test is upcoming)</label>
+                  <Input type="number" step="0.5" placeholder="e.g., 7.5" value={formData.ielts} onChange={(e) => setFormData({ ...formData, ielts: e.target.value })} className="h-12 rounded-xl border-stone-200 bg-white px-4 text-sm focus:border-stone-400 focus:ring-0 font-mono shadow-xs" />
+                </div>
+                <div className="space-y-3 w-full">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">Core Strengths Checklist (Select what you know)</label>
+                  <div className="flex flex-wrap gap-2 p-5 bg-white rounded-2xl border border-stone-200/80 min-h-[120px] shadow-xs">
+                    {getActiveSkillsOptions().map((skill) => {
+                      const isSelected = formData.skills.includes(skill);
+                      return (
+                        <Button key={skill} type="button" variant={isSelected ? "default" : "outline"} className={`text-xs h-8 px-3.5 rounded-xl font-bold transition-all shadow-xs ${isSelected ? "bg-[#B85C38] text-white hover:bg-[#9E4B2C]" : "border-stone-200 bg-white text-stone-600 hover:bg-stone-100"}`} onClick={() => handleSkillToggle(skill)}>{skill}{isSelected && <X className="w-3 h-3 ml-1.5 inline" />}</Button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex gap-2.5 items-center max-w-xl">
+                  <Input placeholder="Type custom specialized skill tags..." value={customSkill} onChange={(e) => setCustomSkill(e.target.value)} className="h-10 text-xs flex-1 rounded-xl border-stone-200 bg-white shadow-xs" />
+                  <Button type="button" size="sm" onClick={handleAddCustomSkill} className="h-10 px-4 text-xs bg-stone-800 text-white hover:bg-stone-900 rounded-xl font-black shadow-xs"><Plus className="w-4 h-4 mr-1" /> Add Tag</Button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* STEP 5: EXPERIENCE */}
+          {currentStep === 5 && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">Your practical operational background history.</h2>
+                <p className="text-sm sm:text-base text-stone-500 font-semibold leading-relaxed">How many years of relevant full-time employment or formal internship experience have you completed? (Put 0 if you are navigating straight from college—completely standard!).</p>
+              </div>
+              <div className="space-y-1.5 pt-2 max-w-xl">
+                <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">Years of Work/Internship History</label>
+                <Input type="number" placeholder="e.g., 2" value={formData.experience} onChange={(e) => setFormData({ ...formData, experience: e.target.value })} className="h-12 rounded-xl border-stone-200 bg-white px-4 text-sm focus:border-stone-400 focus:ring-0 shadow-xs" />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 6: REAPPRAISAL NUMBERS */}
+          {currentStep === 6 && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">Let's align your funding limit boundaries & goals.</h2>
+                <p className="text-sm sm:text-base text-stone-500 font-semibold leading-relaxed">Provide your budget estimates so we can automatically evaluate and isolate customized public vs unsecured alternative financing channels.</p>
+              </div>
+              <div className="space-y-5 pt-2 w-full">
+                <div className="space-y-1.5 max-w-xl">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">Target Overall Budget Comfort (In INR Lakhs)</label>
+                  <Input type="number" placeholder="e.g., enter 40 for ₹ 40 Lakhs budget cap" value={formData.budget} onChange={(e) => setFormData({ ...formData, budget: e.target.value })} className="h-12 rounded-xl border-stone-200 bg-white px-4 text-sm focus:border-stone-400 focus:ring-0 font-mono shadow-xs" />
+                </div>
+                <div className="p-6 bg-white rounded-2xl border border-stone-200/80 space-y-4 max-w-2xl shadow-xs">
+                  <div className="space-y-1">
+                    <label className="text-sm font-black text-stone-800 flex items-center gap-1.5"><Heart className="w-4 h-4 text-[#B85C38] fill-current" /> Does your family have an asset available for loan backing?</label>
+                    <p className="text-xs text-stone-500 font-semibold leading-relaxed">Securing minimal interest rates across national public banks relies heavily on assets (like property or fixed deposits). If you do not have this, it is entirely fine—our model will map specialized unsecured NBFC paths instead!</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                    <Button type="button" variant={formData.hasCollateral === true ? "default" : "outline"} className={`flex-1 text-xs h-11 rounded-xl font-bold transition-all shadow-xs ${formData.hasCollateral === true ? "bg-[#B85C38] text-white hover:bg-[#9E4B2C]" : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"}`} onClick={() => setFormData({ ...formData, hasCollateral: true })}>Yes, asset available</Button>
+                    <Button type="button" variant={formData.hasCollateral === false ? "default" : "outline"} className={`flex-1 text-xs h-11 rounded-xl font-bold transition-all shadow-xs ${formData.hasCollateral === false ? "bg-[#B85C38] text-white hover:bg-[#9E4B2C]" : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"}`} onClick={() => setFormData({ ...formData, hasCollateral: false })}>No, match unsecured routes</Button>
+                  </div>
+                </div>
+                <div className="space-y-1.5 max-w-2xl">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block">In your own words, what is your ultimate post-degree vision?</label>
+                  <Textarea rows={3} placeholder="e.g., I want to lead specialized software engineering tracks abroad or dive into technical cloud management architectures..." value={formData.goal} onChange={(e) => setFormData({ ...formData, goal: e.target.value })} className="rounded-xl border-stone-200 bg-white p-3.5 text-xs shadow-xs" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Validation Alert Box */}
+          {validationError && (
+            <div className="text-xs sm:text-sm text-amber-950 bg-orange-50 p-4 rounded-xl border border-orange-200 font-bold max-w-xl shadow-xs">
+              ⚠️ {validationError}
+            </div>
+          )}
+
         </div>
       </main>
+
+      {/* Full-width sticky alignment control action footer toolbar */}
+      <footer className="w-full max-w-7xl mx-auto px-6 py-6 lg:px-12 flex items-center justify-between border-t border-stone-200/60 relative z-10">
+        <Button type="button" variant="ghost" size="sm" className={`text-xs font-bold text-stone-500 rounded-xl ${currentStep === 1 ? "opacity-0 pointer-events-none" : "hover:bg-stone-100"}`} onClick={handlePrev}>
+          <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Previous Stage
+        </Button>
+
+        {currentStep < totalSteps ? (
+          <Button type="button" size="sm" onClick={handleNext} className="bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold px-5 h-10 shadow-sm transition-all">
+            Continue <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+          </Button>
+        ) : (
+          <Button type="button" size="sm" className="bg-[#B85C38] hover:bg-[#9E4B2C] text-white rounded-xl text-xs font-bold px-6 h-10 shadow-sm transition-colors" onClick={handleFinishOnboarding}>
+            Assemble Workspace Matrix <CheckCircle2 className="w-3.5 h-3.5 ml-1.5" />
+          </Button>
+        )}
+      </footer>
+
     </div>
-  )
+  );
 }

@@ -8,66 +8,43 @@ import { Input } from "@/components/ui/input"
 import { useStudent } from "@/context/student-context"
 import {
   GraduationCap,
-  Brain,
   FileText,
-  Wallet,
-  ArrowRight,
   Sparkles,
-  Users,
-  Globe,
-  Award,
+  BadgeIndianRupee,
+  ArrowRight,
+  MapPin,
   ChevronRight,
+  Building,
 } from "lucide-react"
 
 const features = [
   {
-    icon: Brain,
-    title: "AI College Recommendations",
-    description: "Get personalized college matches based on your profile, budget, and academic credentials.",
+    icon: Building,
+    title: "Tailored University Matching",
+    description: "Discover universities across the US, UK, Canada, and Europe that align perfectly with your exact Indian CGPA and budget constraints.",
   },
   {
     icon: FileText,
-    title: "SOP Generator",
-    description: "AI-powered Statement of Purpose generator tailored to your target universities.",
+    title: "SOP & Document Blueprints",
+    description: "Generate structured drafts for your Statement of Purpose (SOP) built around your real academic and internship history.",
   },
   {
     icon: Sparkles,
-    title: "Skill Gap Analysis",
-    description: "Identify areas for improvement and get actionable suggestions to strengthen your profile.",
+    title: "Indian Profile Optimizer",
+    description: "Identify key gaps in your skills or test scores and get localized guidance to make your global application competitive.",
   },
   {
-    icon: Wallet,
-    title: "Loan Planning",
-    description: "Compare loan options, calculate EMIs, and apply directly through our platform.",
+    icon: BadgeIndianRupee,
+    title: "Education Loan Planning",
+    description: "Compare collateral and non-collateral loan options from major Indian public banks, private banks, and NBFCs.",
   },
 ]
 
 const stats = [
-  { value: "50K+", label: "Students Guided" },
-  { value: "500+", label: "Partner Universities" },
-  { value: "95%", label: "Visa Success Rate" },
-  { value: "$2B+", label: "Loans Facilitated" },
-]
-
-const testimonials = [
-  {
-    name: "Priya Sharma",
-    university: "Stanford University",
-    quote: "EduPilot AI helped me navigate the entire process. From college selection to loan approval, everything was seamless!",
-    image: "PS",
-  },
-  {
-    name: "Rahul Verma",
-    university: "University of Toronto",
-    quote: "The skill gap analysis was eye-opening. I improved my profile and got into my dream university!",
-    image: "RV",
-  },
-  {
-    name: "Ananya Patel",
-    university: "Imperial College London",
-    quote: "The loan comparison feature saved me so much time and money. Highly recommend!",
-    image: "AP",
-  },
+  { value: "100%", label: "Built for Indian Applicants" },
+  { value: "500+", label: "Global Universities Tracked" },
+  { value: "₹ Lakhs", label: "Local Budget Planning" },
+  { value: "1-on-1", label: "Structured Roadmap" },
 ]
 
 export default function LandingPage() {
@@ -75,7 +52,8 @@ export default function LandingPage() {
   const router = useRouter()
   const { updateProfile } = useStudent()
 
-  const handleStartJourney = () => {
+  const handleStartJourney = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     if (goal.trim()) {
       updateProfile({ goal: goal.trim() })
     }
@@ -83,111 +61,133 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
+    // 🎨 Canvas Base: Soft Warm Grey/Cream background from edited-image.jpg
+    <div className="min-h-screen bg-[#F4F4F3] text-[#1A1A1A] font-sans antialiased selection:bg-[#E3F2E9] relative overflow-hidden">
+      
+      {/* 🟢 TOP SECTION: Fluid, Organic Mint Blob Banner extending behind Hero */}
+      <div className="absolute top-0 left-0 right-0 h-[720px] bg-[#E3F2E9] rounded-b-[60px] md:rounded-b-[100px] z-0 pointer-events-none transition-all">
+        {/* Large Decorative Sparkle Star Elements from edited-image.jpg */}
+        <svg className="absolute top-28 right-[10%] w-24 h-24 text-white opacity-80" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c0 6.627-5.373 12-12 12 6.627 0 12 5.373 12 12 0-6.627 5.373-12 12-12-6.627 0-12-5.373-12-12z"/>
+        </svg>
+        <svg className="absolute bottom-16 left-[8%] w-16 h-16 text-white opacity-60" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c0 6.627-5.373 12-12 12 6.627 0 12 5.373 12 12 0-6.627 5.373-12 12-12-6.627 0-12-5.373-12-12z"/>
+        </svg>
+      </div>
+
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 border-b border-stone-200/30 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
+              <div className="w-8 h-8 rounded-xl bg-[#1A1A1A] flex items-center justify-center shadow-xs">
+                <GraduationCap className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xl font-bold">EduPilot AI</span>
+              <span className="text-lg font-black tracking-tight text-[#1A1A1A]">EduPilot</span>
             </div>
+            
             <div className="hidden md:flex items-center gap-8">
-              <Link href="/chat" className="text-muted-foreground hover:text-foreground transition-colors">
-                AI Chat
+              <Link href="/chat" className="text-xs font-bold text-stone-500 hover:text-[#1A1A1A] transition-colors">
+                Profile Builder
               </Link>
-              <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/dashboard" className="text-xs font-bold text-stone-500 hover:text-[#1A1A1A] transition-colors">
                 Dashboard
               </Link>
-              <Link href="/colleges" className="text-muted-foreground hover:text-foreground transition-colors">
-                Colleges
+              <Link href="/colleges" className="text-xs font-bold text-stone-500 hover:text-[#1A1A1A] transition-colors">
+                Universities
               </Link>
-              <Link href="/loans" className="text-muted-foreground hover:text-foreground transition-colors">
-                Loans
+              <Link href="/loans" className="text-xs font-bold text-stone-500 hover:text-[#1A1A1A] transition-colors">
+                Loan Navigator
               </Link>
             </div>
-            <Button asChild className="glow">
-              <Link href="/chat">
-                Get Started
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+
+            {/* High-Contrast Pill Action Button */}
+            <Button onClick={() => router.push("/chat")} className="relative z-50 text-xs font-bold bg-[#1A1A1A] hover:bg-[#2D2D2D] text-white rounded-2xl h-10 px-4 shadow-sm">
+              Plan Your Degree
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
             </Button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-linear-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-150 h-150 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm">AI-Powered Study Abroad Platform</span>
+      <section className="relative pt-40 pb-28 px-4 z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200/60 rounded-full text-[10px] font-black uppercase tracking-wider text-stone-500 shadow-xs mx-auto">
+            <MapPin className="w-3.5 h-3.5 text-[#1A1A1A]" />
+            <span>Dedicated Study Abroad Navigator for Indian Students</span>
           </div>
           
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 text-balance">
-            Your AI Copilot for{" "}
-            <span className="gradient-text">Study Abroad</span>
-            {" "}& Education Loans
+          {/* Bold, heavy rounded typography style */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#1A1A1A] leading-[1.1] max-w-3xl mx-auto">
+            Simplify Your Journey from <br />
+            <span className="text-[#2B3E34] bg-white/40 px-4 py-1 rounded-2xl inline-block mt-2">India to a Global Campus</span>
           </h1>
           
-          <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto text-pretty">
-            From exploration to application, we guide you through every step of your international education journey with AI-powered insights.
+          <p className="text-sm sm:text-base font-semibold text-stone-600 max-w-xl mx-auto leading-relaxed">
+            Build a highly competitive profile, pinpoint academic requirements, and compare localized Indian financial avenues effortlessly.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
-            <Input
-              placeholder="Enter your goal (e.g., MS in CS in USA)"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              className="h-14 px-6 text-base bg-secondary/50 border-border"
-              onKeyDown={(e) => e.key === "Enter" && handleStartJourney()}
-            />
-            <Button 
-              onClick={handleStartJourney}
-              className="h-14 px-8 text-base glow whitespace-nowrap"
-            >
-              Start Journey
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+          {/* Minimalist Bold Sparkle Star Centerpiece */}
+          <div className="flex justify-center py-2 animate-pulse duration-[4000ms]">
+            <svg className="w-16 h-16 text-[#1A1A1A]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c0 6.627-5.373 12-12 12 6.627 0 12 5.373 12 12 0-6.627 5.373-12 12-12-6.627 0-12-5.373-12-12z"/>
+            </svg>
           </div>
 
-          <p className="text-sm text-muted-foreground mt-4">
-            Trusted by 50,000+ students worldwide
-          </p>
+          {/* High-Contrast Dynamic Form Pill Wrapper */}
+          <form onSubmit={handleStartJourney} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto pt-2 relative z-20">
+            <Input
+              placeholder="e.g., MS in Computer Science in Germany"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="h-14 px-5 text-xs bg-white border-stone-200/80 rounded-2xl shadow-sm focus-visible:ring-stone-400"
+            />
+            <Button 
+              type="submit"
+              className="h-14 px-6 text-xs font-bold bg-[#1A1A1A] hover:bg-[#2D2D2D] text-white rounded-2xl shadow-sm shrink-0 cursor-pointer tracking-wide flex items-center justify-center gap-1"
+            >
+              Get Started Free
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </form>
+
+          {/* Screen Pagination Pill Dots Decorator */}
+          <div className="flex items-center gap-1.5 justify-center pt-4">
+            <div className="w-5 h-2 rounded-full bg-[#1A1A1A]" />
+            <div className="w-2 h-2 rounded-full bg-stone-300" />
+            <div className="w-2 h-2 rounded-full bg-stone-300" />
+          </div>
+
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 border-y border-border/50">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Localized Focus Stats */}
+      <section className="py-12 px-4 bg-white border-y border-stone-200/40 relative z-10 shadow-xs">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold gradient-text mb-2">
+              <div key={stat.label} className="text-center p-5 bg-[#FBFBFA] border border-stone-200/40 rounded-3xl">
+                <div className="text-2xl sm:text-3xl font-black text-[#1A1A1A] tracking-tight mb-0.5">
                   {stat.value}
                 </div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything You Need to Study Abroad
+      {/* Structural Features */}
+      <section className="py-24 px-4 relative z-10 bg-[#FBFBFA]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16 space-y-2">
+            <h2 className="text-3xl font-black tracking-tight text-[#1A1A1A]">
+              Everything Needed to Transition Abroad
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our AI-powered platform handles every aspect of your study abroad journey, from finding the perfect college to securing your education loan.
+            <p className="text-stone-500 font-medium text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+              We translate confusing international processes into clear, measurable steps right from day one.
             </p>
           </div>
 
@@ -195,18 +195,18 @@ export default function LandingPage() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="group p-6 rounded-xl glass glass-hover cursor-pointer"
+                className="group p-6 rounded-[28px] border border-stone-200/60 bg-white hover:border-stone-400 transition-all duration-200 shadow-xs"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/30 transition-colors">
-                    <feature.icon className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-center shrink-0">
+                    <feature.icon className="w-5 h-5 text-stone-600" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <div className="space-y-1">
+                    <h3 className="text-sm sm:text-base font-bold flex items-center gap-1.5 text-stone-800 group-hover:text-[#374A3D] transition-colors">
                       {feature.title}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:translate-x-0.5 transition-transform" />
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-stone-500 leading-relaxed font-medium">
                       {feature.description}
                     </p>
                   </div>
@@ -217,123 +217,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-4 bg-secondary/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Your Journey in 4 Simple Steps
-            </h2>
-            <p className="text-muted-foreground">
-              From your first chat to your dream university admission
-            </p>
+      {/* Premium UI Simple Footer */}
+      <footer className="py-10 px-4 bg-white border-t border-stone-200/40 text-xs text-stone-400 font-medium relative z-10">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="font-black text-[#1A1A1A] text-sm">EduPilot</div>
+          <div className="flex gap-5 text-[11px] font-bold">
+            <Link href="/chat" className="hover:text-[#1A1A1A] transition-colors">Profile Builder</Link>
+            <Link href="/dashboard" className="hover:text-[#1A1A1A] transition-colors">Dashboard</Link>
+            <Link href="/colleges" className="hover:text-[#1A1A1A] transition-colors">Universities</Link>
+            <Link href="/loans" className="hover:text-[#1A1A1A] transition-colors">Loan Navigator</Link>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { step: "01", icon: Brain, title: "Exploration", desc: "Chat with AI to define your goals and preferences" },
-              { step: "02", icon: Globe, title: "Preparation", desc: "Get skill gap analysis and improvement plan" },
-              { step: "03", icon: FileText, title: "Application", desc: "Generate SOPs and apply to matched colleges" },
-              { step: "04", icon: Wallet, title: "Financing", desc: "Compare loans and secure funding" },
-            ].map((item) => (
-              <div key={item.step} className="relative">
-                <div className="p-6 rounded-xl glass h-full">
-                  <div className="text-5xl font-bold text-primary/20 mb-4">
-                    {item.step}
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center mb-4">
-                    <item.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Success Stories
-            </h2>
-            <p className="text-muted-foreground">
-              Join thousands of students who achieved their dreams
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial.name}
-                className="p-6 rounded-xl glass"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">
-                    {testimonial.image}
-                  </div>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.university}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-muted-foreground">
-                  &quot;{testimonial.quote}&quot;
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative p-8 sm:p-12 rounded-2xl glass overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-r from-primary/20 to-accent/20 pointer-events-none" />
-            <div className="relative z-10 text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Ready to Start Your Journey?
-              </h2>
-              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                Join thousands of students who have already achieved their study abroad dreams with EduPilot AI.
-              </p>
-              <Button asChild size="lg" className="glow">
-                <Link href="/chat">
-                  Start Free Consultation
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 border-t border-border/50">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-lg font-bold">EduPilot AI</span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link href="/chat" className="hover:text-foreground transition-colors">AI Chat</Link>
-              <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
-              <Link href="/colleges" className="hover:text-foreground transition-colors">Colleges</Link>
-              <Link href="/loans" className="hover:text-foreground transition-colors">Loans</Link>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              2026 EduPilot AI. All rights reserved.
-            </div>
-          </div>
+          <div className="text-[11px] text-stone-400">© 2026 EduPilot. Tailored for Indian students.</div>
         </div>
       </footer>
     </div>

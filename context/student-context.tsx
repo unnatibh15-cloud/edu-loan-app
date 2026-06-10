@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 
 export interface StudentProfile {
   name: string
@@ -14,6 +14,7 @@ export interface StudentProfile {
   skills: string[]
   experience: number
   goal: string
+  hasCollateral: boolean; // true if they have property/FD, false if they don't
 }
 
 interface StudentContextType {
@@ -35,6 +36,7 @@ const defaultProfile: StudentProfile = {
   skills: [],
   experience: 0,
   goal: "",
+  hasCollateral: false,
 }
 
 const StudentContext = createContext<StudentContextType | undefined>(undefined)
@@ -42,11 +44,37 @@ const StudentContext = createContext<StudentContextType | undefined>(undefined)
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<StudentProfile>(defaultProfile)
 
+  // SAFE HYDRATION: Load from localStorage only AFTER the component mounts on the client
+  useEffect(() => {
+    try {
+      const savedProfile = localStorage.getItem("edupilot_profile")
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile))
+      }
+    } catch (error) {
+      console.error("Failed to parse profile from localStorage:", error)
+    }
+  }, [])
+
+  // NATIVE SYNC: Save to localStorage whenever state alters
   const updateProfile = (updates: Partial<StudentProfile>) => {
-    setProfile((prev) => ({ ...prev, ...updates }))
+    setProfile((prev) => {
+      const next = { ...prev, ...updates }
+      try {
+        localStorage.setItem("edupilot_profile", JSON.stringify(next))
+      } catch (error) {
+        console.error("Failed to save profile to localStorage:", error)
+      }
+      return next
+    })
   }
 
   const resetProfile = () => {
+    try {
+      localStorage.removeItem("edupilot_profile")
+    } catch (error) {
+      console.error("Failed to clear localStorage:", error)
+    }
     setProfile(defaultProfile)
   }
 
